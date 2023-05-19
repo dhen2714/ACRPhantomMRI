@@ -69,3 +69,13 @@ def bounding_rectangle(binary_image: np.ndarray) -> tuple[int]:
     phantom = contours[contour_ind]
     x, y, w, h = cv2.boundingRect(phantom)
     return (x, y, w, h)
+
+
+def get_circular_mask(
+    image: np.ndarray, circle_centre: tuple[int, int], circle_radius: float
+) -> np.ndarray:
+    numrows, numcols = image.shape
+    x, y = np.arange(numcols), np.arange(numrows)
+    X, Y = np.meshgrid(x, y)
+    distances = np.sqrt((X - circle_centre[1]) ** 2 + (Y - circle_centre[0]) ** 2)
+    return distances < circle_radius
