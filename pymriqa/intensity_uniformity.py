@@ -23,6 +23,7 @@ class IntensityUniformityTest:
         self.bounding_rectangle = preprocessed_slice.bounding_rectangle
         self.large_roi_centre = None
         self.large_roi_radius = None
+        self.large_roi_mask = None
         self.small_roi_radius = None
         self.high = None
         self.low = None
@@ -56,8 +57,9 @@ class IntensityUniformityTest:
         large_roi_mask = get_circular_mask(
             filtered_image,
             self.large_roi_centre,
-            large_roi_radius - 2 * small_roi_radius,
+            large_roi_radius - small_roi_radius,
         )
+        self.large_roi_mask = large_roi_mask
         self.high = filtered_image[large_roi_mask].max()
         self.low = filtered_image[large_roi_mask].min()
 
