@@ -128,7 +128,8 @@ class SignalGhostingTest:
         bottom = select_roi(self.pixel_array, self.bottom_roi).mean()
         left = select_roi(self.pixel_array, self.left_roi).mean()
         right = select_roi(self.pixel_array, self.right_roi).mean()
-        self.calculate_large_roi_mask()
+        if self.large_roi_mask is None:
+            self.calculate_large_roi_mask()
         large_roi_mean = self.pixel_array[self.large_roi_mask].mean()
         self.ghosting_ratio = np.abs(
             ((top + bottom) - (left + right)) / (2 * large_roi_mean)
