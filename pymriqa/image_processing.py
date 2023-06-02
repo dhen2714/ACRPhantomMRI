@@ -19,10 +19,13 @@ def pixelate(value: float) -> int:
 
 
 def preprocess_slice(
-    image: np.ndarray, pixel_spacing: tuple[float], intensity_threshold=0.1
+    image: np.ndarray,
+    pixel_spacing: tuple[float],
+    water_threshold=0.25,
+    intensity_threshold=0.1,
 ) -> PreprocessedSlice:
     water_mean = phantom_mpv(image, intensity_threshold=intensity_threshold)
-    binary_threshold = water_mean / 4
+    binary_threshold = water_mean * water_threshold
     binary = binary_image(image, threshold=binary_threshold)
     bounding_rect = bounding_rectangle(binary)
     preprocessed = PreprocessedSlice(
