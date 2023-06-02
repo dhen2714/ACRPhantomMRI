@@ -1,4 +1,5 @@
-from .image_processing import PreprocessedSlice, binary_image
+from .image_processing import PreprocessedSlice
+from .image_processing import binary_image, pixelate
 import numpy as np
 
 RAMP_INSERT_WIDTH = 180  # in mm
@@ -20,10 +21,8 @@ class SliceThicknessTest:
     def get_insert_centre(self) -> tuple[tuple[int]]:
         """Find pixel index of ramp insert centre"""
         x, y, w, h = self.bounding_rectangle
-        phantom_centre = np.array(
+        phantom_centre = pixelate(
             (np.round(y + (h - 1) / 2), np.round(x + (w - 1) / 2))
-        ).astype(
-            int
         )  # row, column
 
         # Find the centre row index of the ramp insert
@@ -35,9 +34,9 @@ class SliceThicknessTest:
 
         ramp_insert_height = phantom_centre[0] + bottom_edge - top_edge  # in pixels
 
-        ramp_insert_centre = top_edge + ramp_insert_height / 2
-        centre_top = np.round(ramp_insert_centre - ramp_insert_height / 4).astype(int)
-        centre_bot = np.round(ramp_insert_centre + ramp_insert_height / 4).astype(int)
+        ramp_insert_centre = top_edge + pixelate(ramp_insert_height / 2)
+        centre_top = pixelate(ramp_insert_centre - ramp_insert_height / 4)
+        centre_bot = pixelate(ramp_insert_centre + ramp_insert_height / 4)
         return ((centre_top, phantom_centre[1]), (centre_bot, phantom_centre[1]))
 
     def get_ramp_mean(
@@ -47,11 +46,11 @@ class SliceThicknessTest:
     ) -> float:
         roi_top = self.pixel_array[
             top_ramp_centre[0] - 1 : top_ramp_centre[0] + 2,
-            top_ramp_centre[1] - 30 : top_ramp_centre[1] + 31,
+            top_ramp_centre[1] - 10 : top_ramp_centre[1] + 11,
         ]
         roi_bottom = self.pixel_array[
             bottom_ramp_centre[0] - 1 : bottom_ramp_centre[0] + 2,
-            bottom_ramp_centre[1] - 30 : bottom_ramp_centre[1] + 31,
+            bottom_ramp_centre[1] - 10 : bottom_ramp_centre[1] + 11,
         ]
         top_mean, bottom_mean = roi_top.mean(), roi_bottom.mean()
         self.ramp_mean_top = top_mean
