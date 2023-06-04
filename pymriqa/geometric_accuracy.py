@@ -1,48 +1,32 @@
-from .image_processing import binary_image, phantom_mpv, bounding_rectangle
+from .image_processing import PreprocessedSlice
+from .image_processing import binary_image, bounding_rectangle
 from .measurement import bounds_horizontal, bounds_vertical
-import pydicom
 import cv2
-import numpy as np
 
 
 class GeometricAccuracyTest:
-    def __init__(self, dcmpath: str) -> None:
-        self.dcm = pydicom.dcmread(dcmpath)
-        self._pixel_array = None
-        self.binary_threshold = None
-        self.binary_image = None
-        self.bounding_rectangle = None
+    def __init__(self, preprocessed_slice: PreprocessedSlice) -> None:
+        self.pixel_array = preprocessed_slice.pixel_array
+        self.pixel_spacing = preprocessed_slice.pixel_spacing
+        self.binary_image = preprocessed_slice.binary_image
+        self.binary_threshold = preprocessed_slice.binary_threshold
+        self.bounding_rectangle = preprocessed_slice.bounding_rectangle
+        self.water_mean = preprocessed_slice.water_mean
         self.measurement_bounds = []
-        self.water_mean = None
         self.measurements = []
-
-    @property
-    def pixel_array(self) -> np.ndarray:
-        if self._pixel_array is None:
-            self._pixel_array = self.dcm.pixel_array
-        return self._pixel_array
-
-    def preprocess(self) -> None:
-        self.water_mean = phantom_mpv(self.pixel_array, intensity_threshold=0.1)
-        self.binary_threshold = self.water_mean / 4
-        self.binary_image = binary_image(
-            self.pixel_array, threshold=self.binary_threshold
-        )
-        self.bounding_rectangle = bounding_rectangle(self.binary_image)
 
 
 class LocaliserTest(GeometricAccuracyTest):
-    def __init__(self, dcmpath: str) -> None:
-        super().__init__(dcmpath)
+    def __init__(self, preprocessed_slice: PreprocessedSlice) -> None:
+        super().__init__(preprocessed_slice)
         self.measurement_locations = [0.4, 0.9]
 
     def run(self) -> None:
-        self.preprocess()
         x, y, w, h = self.bounding_rectangle
         measurement_columns = [
             int(x + fraction * w) for fraction in self.measurement_locations
         ]
-        pixel_spacing = self.dcm.PixelSpacing
+        pixel_spacing = self.pixel_spacing
         for measure_col in measurement_columns:
             bounds = bounds_vertical(
                 self.binary_image, measure_col, row_start=y, slice_length=h
@@ -53,8 +37,8 @@ class LocaliserTest(GeometricAccuracyTest):
 
 
 class AxialTest(GeometricAccuracyTest):
-    def __init__(self, dcmpath: str) -> None:
-        super().__init__(dcmpath)
+    def __init__(self, preprocessed_slice: PreprocessedSlice) -> None:
+        super().__init__(preprocessed_slice)
         self.rotated_image = None
         self.binary_image_diagonal = None
         self.bounding_rectangle_diagonal = None
@@ -82,9 +66,8 @@ class AxialTest(GeometricAccuracyTest):
         )
 
     def run(self) -> None:
-        self.preprocess()
         self.preprocess_diagonal()
-        pixel_spacing = self.dcm.PixelSpacing
+        pixel_spacing = self.pixel_spacing
         for bounding_rect, binary_image in zip(
             (self.bounding_rectangle, self.bounding_rectangle_diagonal),
             (self.binary_image, self.binary_image_diagonal),
