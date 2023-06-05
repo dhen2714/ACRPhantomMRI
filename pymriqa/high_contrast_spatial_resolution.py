@@ -1,3 +1,6 @@
+"""
+Test is passed if any row or column is resolved in a group of 4.
+"""
 from scipy.signal import find_peaks, peak_prominences
 import numpy as np
 from typing import Protocol
@@ -98,7 +101,7 @@ class HCSRTest:
             # Metric value is the height of the local minima divided by its neighbouring peak
             metric_values = (profile[peaks] - prominence_values) / profile[peaks]
             profile_metric_vals.append(metric_values)
-        return metric_values
+        return profile_metric_vals
 
     def get_profiles_ul(self, hole_array: HoleArray) -> np.array:
         """
@@ -132,7 +135,7 @@ class HCSRTest:
 
             line_profiles = self.pixel_array[
                 profile_row_ind - 1 : profile_row_ind + 2,
-                profile_col_ind - 2 : profile_col_ind + profile_length,
+                profile_col_ind - 2 : profile_col_ind + profile_length + 2,
             ]  # 2 pixel buffer for the column
             line_profile_maxima = np.max(line_profiles, axis=1)
             profile_max_ind = np.where(
@@ -173,7 +176,7 @@ class HCSRTest:
             profile_col_ind = line_profile_cols_start[i, 1]
 
             line_profiles = self.pixel_array[
-                profile_row_ind - 2 : profile_row_ind + profile_length,
+                profile_row_ind - 2 : profile_row_ind + profile_length + 2,
                 profile_col_ind - 1 : profile_col_ind + 2,
             ]  # 2 pixel buffer for the row
             line_profile_maxima = np.max(line_profiles, axis=0)
